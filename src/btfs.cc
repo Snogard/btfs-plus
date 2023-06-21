@@ -111,6 +111,7 @@ advance() {
 
 Read::Read(char *buf, int index, off_t offset, size_t size) {
 	auto ti = handle.torrent_file();
+	handle.file_priority(index, 1); //TODO: make it an option to fix saving a complete file
 
 #if LIBTORRENT_VERSION_NUM < 10100
 	int64_t file_size = ti->file_at(index).size;
