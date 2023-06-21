@@ -205,6 +205,7 @@ setup() {
 		handle.pause();
 
 	for (int i = 0; i < ti->num_files(); ++i) {
+		handle.file_priority(i, 0);
 		std::string parent("");
 
 #if LIBTORRENT_VERSION_NUM < 10100
