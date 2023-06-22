@@ -111,7 +111,8 @@ advance() {
 
 Read::Read(char *buf, int index, off_t offset, size_t size) {
 	auto ti = handle.torrent_file();
-	handle.file_priority(index, 1); //TODO: make it an option to fix saving a complete file
+	if (params.keep)
+		handle.file_priority(index, 4);
 
 #if LIBTORRENT_VERSION_NUM < 10100
 	int64_t file_size = ti->file_at(index).size;
@@ -206,7 +207,7 @@ setup() {
 		handle.pause();
 
 	for (int i = 0; i < ti->num_files(); ++i) {
-		handle.file_priority(i, 0);
+		handle.file_priority(i, params.default_priority);
 		std::string parent("");
 
 #if LIBTORRENT_VERSION_NUM < 10100
@@ -801,7 +802,7 @@ populate_target(std::string& target, char *arg, std::string& datafolder) {
 				folder_check=true
 		}
 
-	char *s = strdup(templ.c_str());
+		char *s = strdup(templ.c_str());
 		folder_check = (s != NULL && folder_check)
 	}
 	else{
@@ -951,6 +952,7 @@ static const struct fuse_opt btfs_opts[] = {
 	BTFS_OPT("--max-port=%lu",               max_port,             4),
 	BTFS_OPT("--max-download-rate=%lu",      max_download_rate,    4),
 	BTFS_OPT("--max-upload-rate=%lu",        max_upload_rate,      4),
+	BTFS_OPT("--default-priority=%lu",       default_priority,     1),
 	FUSE_OPT_END
 };
 
@@ -988,6 +990,7 @@ print_help() {
 	printf("    --max-port=N           end of listen port range\n");
 	printf("    --max-download-rate=N  max download rate (in kB/s)\n");
 	printf("    --max-upload-rate=N    max upload rate (in kB/s)\n");
+	printf("    --default-priority=N   default file priority\n");
 }
 
 int
@@ -1075,7 +1078,7 @@ main(int argc, char *argv[]) {
 
 	if (mkdir(p.save_path.c_str(), 0777) < 0)	{
 		if (errno != EEXIST)
-		RETV(perror("Failed to create files directory"), -1);
+			RETV(perror("Failed to create files directory"), -1);
 	}
 
 	curl_global_init(CURL_GLOBAL_ALL);
