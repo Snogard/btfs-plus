@@ -769,7 +769,7 @@ btfs_getxattr(const char *path, const char *key, char *value, size_t len) {
 }
 
 static bool
-populate_target(std::string& target, char *arg) {
+populate_target(std::string& target, char *arg, std::string& datafolder) {
 	std::string templ;
 
 	if (arg) {
@@ -789,11 +789,27 @@ populate_target(std::string& target, char *arg) {
 			RETV(perror("Failed to create target"), false);
 	}
 
-	templ += "/btfs-XXXXXX";
+	bool folder_check=false;
+
+	if (params.keep){
+		templ += "/"+ datafolder; 
+
+		if (mkdir(templ.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) < 0) {
+			if (errno != EEXIST)
+				RETV(perror("Failed to create target"), false);
+			else
+				folder_check=true
+		}
 
 	char *s = strdup(templ.c_str());
+		folder_check = (s != NULL && folder_check)
+	}
+	else{
+		templ += "/btfs-XXXXXX"
+		folder_check = (s != NULL && mkdtemp(s) != NULL)
+	}
 
-	if (s != NULL && mkdtemp(s) != NULL) {
+	if (folder_check) {
 		char *x = realpath(s, NULL);
 
 		if (x)
@@ -1038,7 +1054,12 @@ main(int argc, char *argv[]) {
 
 	std::string target;
 
-	if (!populate_target(target, params.data_directory))
+	std::string mountpoint(argv[argc-1]);
+	std::string mountpoint_foldername;
+
+	mountpoint_foldername = mountpoint.substr(mountpoint.find_last_of("/\\") + 1);
+
+	if (!populate_target(target, params.data_directory,mountpoint_foldername))
 		return -1;
 
 	libtorrent::add_torrent_params p;
@@ -1052,8 +1073,10 @@ main(int argc, char *argv[]) {
 #endif
 	p.save_path = target + "/files";
 
-	if (mkdir(p.save_path.c_str(), 0777) < 0)
+	if (mkdir(p.save_path.c_str(), 0777) < 0)	{
+		if (errno != EEXIST)
 		RETV(perror("Failed to create files directory"), -1);
+	}
 
 	curl_global_init(CURL_GLOBAL_ALL);
 
