@@ -205,6 +205,8 @@ setup() {
 
 	if (params.browse_only)
 		handle.pause();
+	else if (params.validate)
+		handle.force_recheck();
 
 	for (int i = 0; i < ti->num_files(); ++i) {
 		handle.file_priority(i, params.default_priority);
@@ -952,6 +954,7 @@ static const struct fuse_opt btfs_opts[] = {
 	BTFS_OPT("--max-download-rate=%lu",      max_download_rate,    4),
 	BTFS_OPT("--max-upload-rate=%lu",        max_upload_rate,      4),
 	BTFS_OPT("--default-priority=%lu",       default_priority,     1),
+	BTFS_OPT("--validate",       		     validate,             1),
 	FUSE_OPT_END
 };
 
@@ -990,6 +993,7 @@ print_help() {
 	printf("    --max-download-rate=N  max download rate (in kB/s)\n");
 	printf("    --max-upload-rate=N    max upload rate (in kB/s)\n");
 	printf("    --default-priority=N   default file priority\n");
+	printf("    --validate   		   validate the files on start up\n");
 }
 
 int
