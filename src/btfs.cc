@@ -791,23 +791,22 @@ populate_target(std::string& target, char *arg, std::string& datafolder) {
 	}
 
 	bool folder_check=false;
-
+	char *s;
 	if (params.keep){
 		templ += "/"+ datafolder; 
 
 		if (mkdir(templ.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) < 0) {
-			if (errno != EEXIST)
-				RETV(perror("Failed to create target"), false);
-			else
-				folder_check=true
+			if (errno != EEXIST) { RETV(perror("Failed to create target"), false); }
+			else { folder_check = true; }
 		}
 
-		char *s = strdup(templ.c_str());
-		folder_check = (s != NULL && folder_check)
+		s = strdup(templ.c_str());
+		folder_check = (s != NULL && folder_check);
 	}
 	else{
-		templ += "/btfs-XXXXXX"
-		folder_check = (s != NULL && mkdtemp(s) != NULL)
+		templ += "/btfs-XXXXXX";
+		s = strdup(templ.c_str());
+		folder_check = (s != NULL && mkdtemp(s) != NULL);
 	}
 
 	if (folder_check) {
